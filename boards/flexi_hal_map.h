@@ -54,10 +54,22 @@
 #define EEPROM_ENABLE 128
 #endif
 
+//#undef I2C_ENABLE
+#undef EEPROM_ENABLE
+
 #define HAS_BOARD_INIT
 
-#define SERIAL_PORT             1   // GPIOA: TX =  9, RX = 10
+//#define SERIAL2_PORT             1   // GPIOA: TX =  9, RX = 10
+//#define SERIAL1_PORT            33  // GPIOC: TX = 10, RX =  5
+//#define SERIAL_PORT            6   // GPIOC: TX = 6, RX =  7
+
+#define SERIAL2_PORT             1   // GPIOA: TX =  9, RX = 10
 #define SERIAL1_PORT            33  // GPIOC: TX = 10, RX =  5
+#define SERIAL_PORT            6   // GIOOC- TX = 6, RX = 7
+
+//#define SERIAL_PORT             1   // GPIOA: TX =  9, RX = 10
+//#define SERIAL1_PORT            33  // GPIOC: TX = 10, RX =  5
+//#define SERIAL2_PORT            6   // GIOOC- TX = 6, RX = 7
 
 #if MODBUS_ENABLE
 #define MODBUS_RTU_STREAM       1
@@ -248,9 +260,13 @@
 #define PROBE_PIN               AUXINPUT4_PIN
 #endif
 
-#if SAFETY_DOOR_ENABLE
-#define SAFETY_DOOR_PORT        AUXINPUT3_PORT
-#define SAFETY_DOOR_PIN         AUXINPUT3_PIN  
+//#if SAFETY_DOOR_ENABLE
+//#define SAFETY_DOOR_PORT        AUXINPUT3_PORT
+//#define SAFETY_DOOR_PIN         AUXINPUT3_PIN
+//#endif
+#if PROBE2_ENABLE
+#define PROBE2_PORT AUXINPUT3_PORT
+#define PROBE2_PIN AUXINPUT3_PIN
 #endif
 
 #if MOTOR_WARNING_ENABLE
