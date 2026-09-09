@@ -65,11 +65,11 @@
 
 #define SERIAL2_PORT             1   // GPIOA: TX =  9, RX = 10
 #define SERIAL1_PORT            33  // GPIOC: TX = 10, RX =  5
-#define SERIAL_PORT            6   // GIOOC- TX = 6, RX = 7
+#define SERIAL_PORT            6   // GPIOC: TX = 6, RX = 7
 
 //#define SERIAL_PORT             1   // GPIOA: TX =  9, RX = 10
 //#define SERIAL1_PORT            33  // GPIOC: TX = 10, RX =  5
-//#define SERIAL2_PORT            6   // GIOOC- TX = 6, RX = 7
+//#define SERIAL2_PORT            6   // GPIOC: TX = 6, RX = 7
 
 #if MODBUS_ENABLE
 #define MODBUS_RTU_STREAM       1
@@ -298,6 +298,8 @@
 #define SPI_IRQ_PIN             3
 #define SPI_RST_PORT            GPIOA   // TXD_INT
 #define SPI_RST_PIN             9
+#define WIZNET_CS_PORT          SPI_CS_PORT
+#define WIZNET_CS_PIN           SPI_CS_PIN
 #endif
 
 #if SDCARD_ENABLE

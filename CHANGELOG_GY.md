@@ -1,5 +1,18 @@
 # GY Local Patch Changelog
-> Branch/patch applied on top of grblHAL/STM32F4xx master (5c93e06, 2026-03-31)
+> Branch/patch applied on top of grblHAL/STM32F4xx master (8300aa0, 2026-09-09)
+
+---
+
+## 2026-09-09
+
+### Sync
+- Synced tree + submodules to [grblHAL/STM32F4xx](https://github.com/grblHAL/STM32F4xx) `8300aa0` ("Updated submodules").
+- Keypad now tracks upstream `Plugin_I2C_keypad` `c349330` (proper `KEYPAD_ENABLE=2` UART/MPG path). Prior Interactive_Jog local name fix no longer required.
+- `flexi_script.py`: quote `$BUILD_DIR` paths so UF2 post-build works when the workspace path contains spaces.
+
+### Reapplied GY overlays (unchanged intent from 2026-04-11)
+- `FLEXI_STM32F446RETX_BL_FLASH_EMU.ld`, `boards/flexi_hal_map.h` (EEPROM emul, dual UART ports, PROBE2)
+- `platformio.ini` `[env:f446re_flexi_3axis_basic]` + `[env:flexi]`
 
 ---
 
@@ -53,11 +66,8 @@
 - **To**: `https://github.com/grblHAL/Plugins_spindle` (branch `master`, commit `9b32c53`)
 - Reason: Expatria fork had stale `modbus_settings_t` typedef and old `stream_enumerate_streams` signature (missing `void *data` argument) incompatible with updated grblHAL core.
 
-#### `keypad/keypad.c` — local fix (not a submodule update)
-- Fixed stale variable names in the `#else` branch (compiled when `KEYPAD_ENABLE != 1`, i.e. UART keypad mode):
-  - `nvs_address` → `keypad_nvs_address`
-  - `setting_details` → `keypad_setting_details`
-- Root cause: the `Interactive_Jog` branch of `grblHAL/keypad` has the `#if KEYPAD_ENABLE == 1` path fully updated but left the `#else` branch referencing variables that no longer exist in the file scope.
+#### `keypad/` — (superseded 2026-09-09)
+- Earlier Interactive_Jog local `#else` name fix replaced by sync to upstream keypad `c349330`.
 
 ---
 
@@ -65,5 +75,5 @@
 
 | Environment | Result | UF2 Size | Notes |
 |---|---|---|---|
-| `f446re_flexi_3axis_basic` | ✅ SUCCESS | 421,376 bytes | 3-axis, USB CDC, no plugins |
-| `flexi` | ✅ SUCCESS | 734,208 bytes | 4-axis, ETH, WebUI, VFD, SD |
+| `f446re_flexi_3axis_basic` | ✅ SUCCESS (2026-04-11) | 421,376 bytes | 3-axis, USB CDC, no plugins |
+| `flexi` | ✅ SUCCESS (2026-09-09) | 751,616 bytes | 4-axis, ETH, WebUI, VFD, SD — post-sync |

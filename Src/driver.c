@@ -415,13 +415,22 @@ static output_signal_t outputpin[] = {
     { .id = Bidirectional_MotorUARTM7,  .port = MOTOR_UARTM7_PORT,  .pin = MOTOR_UARTM7_PIN,        .group = PinGroup_MotorUART },
 #endif
 #ifdef FLASH_CS_PORT
-    { .id = Output_FlashCS,         .port = FLASH_CS_PORT,          .pin = FLASH_CS_PIN,            .group = PinGroup_SPI },
+    { .id = Output_FlashCS,         .port = FLASH_CS_PORT,          .pin = FLASH_CS_PIN,            .group = PinGroup_SPICS },
 #endif
 #ifdef SD_CS_PORT
-    { .id = Output_SdCardCS,        .port = SD_CS_PORT,             .pin = SD_CS_PIN,               .group = PinGroup_SdCard },
+    { .id = Output_SdCardCS,        .port = SD_CS_PORT,             .pin = SD_CS_PIN,               .group = PinGroup_SPICS },
 #endif
 #ifdef SPI_CS_PORT
-    { .id = Output_SPICS,           .port = SPI_CS_PORT,            .pin = SPI_CS_PIN,              .group = PinGroup_SPI },
+    { .id = Output_SPICS0,           .port = SPI_CS_PORT,           .pin = SPI_CS_PIN,              .group = PinGroup_SPICS },
+#endif
+#ifdef SPI_CS1_PORT
+    { .id = Output_SPICS1,           .port = SPI_CS1_PORT,          .pin = SPI_CS1_PIN,             .group = PinGroup_SPICS },
+#endif
+#ifdef SPI_CS2_PORT
+    { .id = Output_SPICS2,           .port = SPI_CS2_PORT,          .pin = SPI_CS2_PIN,             .group = PinGroup_SPICS },
+#endif
+#ifdef SPI_CS3_PORT
+    { .id = Output_SPICS3,           .port = SPI_CS3_PORT,          .pin = SPI_CS3_PIN,             .group = PinGroup_SPICS },
 #endif
 #ifdef SPI_RST_PORT
     { .id = Output_SPIRST,          .port = SPI_RST_PORT,           .pin = SPI_RST_PIN,             .group = PinGroup_SPI },
@@ -495,12 +504,12 @@ static output_signal_t outputpin[] = {
     { .id = Output_Analog_Aux0,     .port = AUXOUTPUT0_PWM_PORT,    .pin = AUXOUTPUT0_PWM_PIN,      .group = PinGroup_AuxOutputAnalog, .mode = { PINMODE_PWM } },
 #endif
 #ifdef AUXOUTPUT1_ANALOG_PORT
-    { .id = Output_Analog_Aux1,     .port = AUXOUTPUT1_ANALOG_PORT, .pin = AUXOUTPUT1_ANALOG_PIN,   .group = PinGroup_AuxOutputAnalog }
+    { .id = Output_Analog_Aux1,     .port = AUXOUTPUT1_ANALOG_PORT, .pin = AUXOUTPUT1_ANALOG_PIN,   .group = PinGroup_AuxOutputAnalog },
 #elif defined(AUXOUTPUT1_PWM_PORT)
     { .id = Output_Analog_Aux1,     .port = AUXOUTPUT1_PWM_PORT,    .pin = AUXOUTPUT1_PWM_PIN,      .group = PinGroup_AuxOutputAnalog, .mode = { PINMODE_PWM } },
 #endif
 #ifdef AUXOUTPUT2_ANALOG_PORT
-    { .id = Output_Analog_Aux2,     .port = AUXOUTPUT2_ANALOG_PORT, .pin = AUXOUTPUT2_ANALOG_PIN,   .group = PinGroup_AuxOutputAnalog }
+    { .id = Output_Analog_Aux2,     .port = AUXOUTPUT2_ANALOG_PORT, .pin = AUXOUTPUT2_ANALOG_PIN,   .group = PinGroup_AuxOutputAnalog },
 #elif defined(AUXOUTPUT2_PWM_PORT)
     { .id = Output_Analog_Aux2,     .port = AUXOUTPUT2_PWM_PORT,    .pin = AUXOUTPUT2_PWM_PIN,      .group = PinGroup_AuxOutputAnalog, .mode = { PINMODE_PWM } },
 #endif
@@ -1668,7 +1677,7 @@ static control_signals_t systemGetState (void)
 #if DRIVER_PROBES
 
 // Returns the probe triggered pin state.
-static bool probeGetState (void * input)
+static bool probeGetState (void *input)
 {
     return DIGITAL_IN(((input_signal_t *)input)->port, ((input_signal_t *)input)->pin);
 }
@@ -1841,11 +1850,11 @@ static void aux_assign_irq (void)
                         if(input->pin == input2->pin) {
                             if(input->id < input2->id || (aux->signal.bits & main_signals.bits)) {
                                 input2->cap.irq_mode = IRQ_Mode_None;
-                                if(!(xbar_is_probe_in(input2->id)))
+                                if(!xbar_is_probe_in(input2->id))
                                     input2->id = (pin_function_t)(Input_Aux0 + input2->user_port);
                             } else {
                                 input->cap.irq_mode = IRQ_Mode_None;
-                                if(!(xbar_is_probe_in(input->id)))
+                                if(!xbar_is_probe_in(input->id))
                                     input->id = (pin_function_t)(Input_Aux0 + input->user_port);
                             }
                         }
@@ -1983,7 +1992,7 @@ void gpio_irq_enable (const input_signal_t *input, pin_irq_mode_t irq_mode)
 }
 
 // Configures peripherals when settings are initialized or changed
-void settings_changed (settings_t *settings, settings_changed_flags_t changed)
+void on_settings_changed (settings_t *settings, settings_changed_flags_t changed)
 {
 #if USE_STEPDIR_MAP
     stepdirmap_init(settings);
@@ -2519,10 +2528,8 @@ static bool driver_setup (settings_t *settings)
 
             if(outputpin[i].group == PinGroup_MotorChipSelect ||
                 outputpin[i].group == PinGroup_MotorUART ||
-                 outputpin[i].id == Output_SPICS ||
-                  outputpin[i].id == Output_FlashCS ||
-                   outputpin[i].id == Output_SdCardCS ||
-                    (outputpin[i].group == PinGroup_StepperEnable && (st_enable.mask & xbar_fn_to_axismask(outputpin[i].id).mask)))
+                 outputpin[i].group == PinGroup_SPICS ||
+                  (outputpin[i].group == PinGroup_StepperEnable && (st_enable.mask & xbar_fn_to_axismask(outputpin[i].id).mask)))
                 outputpin[i].port->BSRR = GPIO_Init.Pin;
 
             HAL_GPIO_Init(outputpin[i].port, &GPIO_Init);
@@ -2557,17 +2564,21 @@ static bool driver_setup (settings_t *settings)
 
 #endif
 
-#if LITTLEFS_ENABLE
+#if EEPROM_ENABLE >= 32 && LITTLEFS_ENABLE
 
 #include "sdcard/fs_littlefs.h"
-#include "sdcard/macros.h"
 
+#if LITTLEFS_ENABLE == 1
+    fs_littlefs_mount("/littlefs", eeprom_littlefs_hal());
+#else
     fs_littlefs_mount("/", eeprom_littlefs_hal());
+#endif
+
 #endif
 
     IOInitDone = settings->version.id == 23;
 
-    hal.settings_changed(settings, (settings_changed_flags_t){0});
+    grbl.on_settings_changed(settings, (settings_changed_flags_t){0});
 
 #if ETHERNET_ENABLE
     enet_start();
@@ -2765,7 +2776,7 @@ bool driver_init (void)
 #else
     hal.info = "STM32F401";
 #endif
-    hal.driver_version = "260324";
+    hal.driver_version = "260729";
     hal.driver_url = GRBL_URL "/STM32F4xx";
 #ifdef BOARD_NAME
     hal.board = BOARD_NAME;
@@ -2785,7 +2796,7 @@ bool driver_init (void)
     hal.timer.start = timerStart;
     hal.timer.stop = timerStop;
 
-    hal.settings_changed = settings_changed;
+    grbl.on_settings_changed = on_settings_changed;
 
     cycles2us_factor = 0xFFFFFFFFU / hal.f_mcu;
 
